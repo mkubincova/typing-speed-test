@@ -1,13 +1,17 @@
 from tkinter import *
-from text import sentences
+from text import text_easy, text_medium, text_hard
 import random
 
+DIFFICULTY = {
+    1: text_easy,
+    2: text_medium,
+    3: text_hard
+}
 
 class TypingSpeedTest:
     def __init__(self, window, heading):
         self.timer = None
-        random.shuffle(sentences)
-        self.text = " ".join(sentences)
+        self.text = ""
         self.position = 0
         self.chars = 0
         self.correct_chars = 0
@@ -20,17 +24,26 @@ class TypingSpeedTest:
         self.center_window()
 
         self.heading_label = Label(text=heading, font=("Arial", 40), pady=20)
+        self.difficulty = IntVar(value=1)
+        self.frame_1 = Frame(self.window)
+        self.easy_radio = Radiobutton(self.frame_1, text="Easy", variable=self.difficulty, value=1, pady=20,  font=("Arial", 18))
+        self.medium_radio = Radiobutton(self.frame_1, text="Medium", variable=self.difficulty, value=2, pady=20, font=("Arial", 18))
+        self.hard_radio = Radiobutton(self.frame_1, text="Hard", variable=self.difficulty, value=3, pady=20, font=("Arial", 18))
         self.start_btn = Button(text="Start", command=self.start_test, font=("Arial", 20), padx=10, pady=7)
+
         self.timer_label = Label(text="60", font=("Arial", 25), pady=10)
-        self.text_widget = Text(font=("Arial", 20), width=1, height=1, spacing2=10, wrap=WORD)
-        self.text_widget.insert(END, self.text)
-        self.user_input = Entry()
+        self.text_widget = Text(font=("Arial", 20), width=1, height=1, spacing2=10, wrap=WORD, background="#332941", foreground="white")
+        self.user_input = Entry(font=("Arial", 20))
         self.user_input.bind('<KeyPress>', self.on_user_input)
         self.speed_label = Label(text="", font=("Arial", 20))
         self.accuracy_label = Label(text="", font=("Arial", 20))
 
-        # Display initial UI
+        # Starting UI
         self.heading_label.pack()
+        self.frame_1.pack()
+        self.easy_radio.pack(side='left')
+        self.medium_radio.pack(side='left')
+        self.hard_radio.pack(side='left')
         self.start_btn.pack()
 
     def center_window(self):
@@ -43,7 +56,17 @@ class TypingSpeedTest:
         self.window.geometry("{}x{}+{}+{}".format(window_width, window_height, x_cor, y_cor))
 
     def start_test(self):
-        self.start_btn.pack_forget()
+        # Set text
+        text_list = DIFFICULTY[self.difficulty.get()]
+        random.shuffle(text_list)
+        self.text = " ".join(text_list)
+        self.text_widget.insert(END, self.text)
+
+        # Remove starting UI
+        self.frame_1.destroy()
+        self.start_btn.destroy()
+
+        # Add test UI & start countdown
         self.timer_label.pack()
         self.text_widget.pack(side='top', fill='both', expand=True)
         self.update_current_char()
@@ -62,16 +85,16 @@ class TypingSpeedTest:
     def update_current_char(self):
         self.text_widget.tag_remove('current', f"1.0", "end")
         self.text_widget.tag_add('current', f"1.{self.position}", f"1.{self.position + 1}")
-        self.text_widget.tag_config('current', underline=True, underlinefg='yellow')
+        self.text_widget.tag_config('current', underline=True, underlinefg='#FFBE00')
 
     def set_incorrect_char(self):
         self.text_widget.tag_add("incorrect", f"1.{self.position}", f"1.{self.position + 1}")
-        self.text_widget.tag_config("incorrect", background="red")
+        self.text_widget.tag_config("incorrect", background="#DC0000")
 
     def set_corrected_char(self):
         self.text_widget.tag_remove("incorrect", f"1.{self.position}", f"1.{self.position + 1}")
         self.text_widget.tag_add("correct", f"1.{self.position}", f"1.{self.position + 1}")
-        self.text_widget.tag_config("correct", background="blue")
+        self.text_widget.tag_config("correct", background="#2E99B0")
 
     def on_user_input(self, event):
         if event.keysym == 'space':
